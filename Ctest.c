@@ -114,7 +114,9 @@ int max(int x, int y)
 float *search(float (*pointer)[4], int n) // pointer为指向包含4个元素的一维数组的指针变量，如pointer + 1指向score数组序号为1的行
 {
     float *pt; // 声明pt指针
-    // pointer为主函数main中score二维数组的地址，pointer + n为选择二维数组中一维数组（哪一行）的序号，指向score数组序号为pointer + n的行
+    // pointer为主函数main中score二维数组的地址（起始地址score[0][4]），pointer + n为选择二维数组中一维数组（哪一行）的序号，指向score数组序号为pointer + n的行
     pt = *(pointer + n); // *(pointer + n)指向score数组的n行0列（注意score也是指向行的指针，而不是指向列的指针），它是一个指针
-    return (pt);         // 返回一个指向列元素的指针变量
+    // pt = (*pointer + n);
+    // 若为pt = (*pointer + n),则表示二维数组中a[0][1]开始的4个元素的值,因为*pointer固定为score[0]，再+n则表示从第一行的0位开始计算，pt变为指向元素指针
+    return (pt); // 返回一个指向列元素的指针变量
 }
