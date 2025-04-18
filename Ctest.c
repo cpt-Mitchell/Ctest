@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <malloc.h>
+#include <stdlib.h>
 // #define FORMAT "%d,%d\n" // 宏替换
 #define FORMAT "%d\n%s\n%f\n%f\n%f\n"
 #define LEN sizeof(struct dynamicList) // sizeof为求字节数运算符
@@ -32,37 +33,69 @@ struct dynamicList
     float score;
     struct dynamicList *next;
 };
-int listNum;                    // listNum为全局变量，文本文件模块中各函数均可使用
-struct dynamicList *creat(void) // 定义函数，此函数返回一个指向链表头的指针
+int listNum; // listNum为全局变量，文本文件模块中各函数均可使用
+int inerNum;
+struct dynamicList *creat(state) // 定义函数，此函数返回一个指向链表起始的指针,函数首部在括号内写void表示本函数没有形参，若有则进行传参
 {
     struct dynamicList *head;    // 声明head为结构体dynamicList的头地址指针变量
     struct dynamicList *p1, *p2; // 声明p1与p2为指向dynamicList的指针变量
-    listNum = 0;
+    if (state)
+    {
+        listNum = 0;
+    }
+    else
+    {
+        inerNum = 0;
+    }
     // 开辟一个新单元
+    // 使用*malloc(unsigned int size)函数在内存的动态存储区中分配一个长度为size的连续空间，若此函数未能执行则返回NULL（空指针）
     // malloc返回的是不指向任何类型数据的指针（void *）
     p1 = p2 = (struct dynamicList *)malloc(LEN); // 而p1、p2是指向struct dynamicList类型数据的指针变量，因此必须用强制类型转换的方法使指针的基类型改变为struct dynamicList类型
+    if (state)
+    {
+        printf("Plese input need create list:");
+    }
+    else
+    {
+        printf("Plese input need insert list:");
+    }
     scanf("%d,%f", &p1->num, &p1->score);
     head = NULL;
     while (p1->num != 0)
     {
-        listNum = listNum + 1;
-        if (listNum == 1)
-            head = p1; // 第一次循环时赋给head头地址
+        if (state)
+        {
+            listNum = listNum + 1;
+            if (listNum == 1)
+                head = p1; // 第一次循环时赋给head头地址
+            else
+                p2->next = p1;
+            p2 = p1;
+            p1 = (struct dynamicList *)malloc(LEN);
+            scanf("%d,%f", &p1->num, &p1->score);
+        }
         else
-            p2->next = p1;
-        p2 = p1;
-        p1 = (struct dynamicList *)malloc(LEN);
-        scanf("%d,%f", &p1->num, &p1->score);
+        {
+            inerNum = inerNum + 1;
+            if (inerNum == 1)
+                head = p1; // 第一次循环时赋给head头地址
+            else
+                p2->next = p1;
+            p2 = p1;
+            p1 = (struct dynamicList *)malloc(LEN);
+            scanf("%d,%f", &p1->num, &p1->score);
+        }
     } // p1指向新节点，p2指向链表最后一个结点，把p1所指的结点连接在p2所指的结点后，用p2->next=p1来实现
     p2->next = NULL; // 最后使p2指向空结点结束
-    return (head);   // head已定义为指针变量，指向struct dynamicList类型数据，因此返回的是链表的头地址
+
+    return (head); // head已定义为指针变量，指向struct dynamicList类型数据，因此返回的是链表的头地址
 }
 
 // 输出链表
 void printList(struct dynamicList *head)
 {
     struct dynamicList *p;
-    printf("\nNow,These %d record are:\n", listNum);
+    printf("\nNow,These %d record are:\n", listNum + inerNum);
     p = head;
     if (head != NULL)
         do
@@ -72,7 +105,147 @@ void printList(struct dynamicList *head)
         } while (p != NULL);
 }
 
+// 删除链表结点
+struct dynamicList *del(struct dynamicList *head, long delNum)
+{
+    struct dynamicList *p1, *p2;
+    if (head == NULL)
+    {
+        printf("\nlist null!\n");
+    }
+    else
+    {
+        p1 = head;
+        while (delNum != p1->num && p1->next != NULL) // 判断p1指向的不是所要找的结点，并且后面还有结点的时候
+        {
+            p2 = p1;
+            p1 = p1->next; // p1后移一个结点
+        }
+        if (delNum == p1->num) // 判断当前结点是否为需要删除的结点
+        {
+            if (p1 == head)
+            {
+                head = p1->next; // 若p1指向的是首结点（也就是需要删除的是首个结点），把第二个结点地址赋予head（相当于把第二个结点当头地址，而第一个结点在头地址之前就不计算在链表之内）
+            }
+            else
+            {
+                p2->next = p1->next; // 否则将下一结点地址赋给前一结点地址（就是跳过需要删除的结点，使其不计算在链表之内，达成删除结点效果）
+                printf("delete:%d\n", delNum);
+            }
+            listNum--;
+        }
+        else
+        {
+            printf("%dnot been found!\n", delNum); // 找不到该节点
+        }
+    }
+    return (head);
+}
+
+// 插入链表结点
+struct dynamicList *insert(struct dynamicList *head, struct dynamicList *in) // 需要插入的结点内容传入in链表形参
+{
+    struct dynamicList *p0, *p1, *p2;
+    p1 = head; // p1指向当前头结点
+    p0 = in;   // p0指向需要插入的结点链表的头结点
+    if (in != NULL)
+    {
+        if (head == NULL) // 若头结点为空（链表没有结点）
+        {
+            head = p0; // 将需插入的结点的链表头结点赋给当前头结点
+        }
+        else
+        {
+            if (p0->num < p1->num) // 在p1前插入
+            {
+                p0 = head;
+                p1 = p0->next;
+            }
+            while (p0->num > p1->num && p1->next != NULL)
+            {
+                p2 = p1;       // 使p2指向刚才p1指向的结点
+                p1 = p1->next; // p1后移一个结点
+            }
+            if (p0->num <= p1->num) // 当p1的num值加至p0的num值之后时执行插入动作
+            {
+                p2->next = p0; // 使p2结尾指向p0`
+                p0->next = p1; // 使p0结尾指向p1完成插入
+            }
+            else
+            { // 在结尾进行插入动作
+                p1->next = p0;
+                p0->next = NULL;
+            }
+        }
+    }
+    return (head);
+}
+
+// 写入、读出一组或多组数据
+struct student_type // 声明结构体
+{
+    char name[10];
+    int num;
+    int age;
+    char addr[15];
+} stud[4]; // 输入4个数据
+void load()
+{
+    FILE *fp;
+    int i;
+    if ((fp = fopen("stu_dat", "rb")) == NULL)
+    {
+        printf("cannot open infile\n");
+        return;
+    }
+    for (i = 0; i < 4; i++)
+    {
+        if (fread(&stud[i], sizeof(struct student_type), 1, fp) != 1)
+        {
+            if (feof(fp)) // feof(fp)用来判断文件是否真的结束，如果文件结束则返回值为1，否则为0
+            {
+                fclose(fp); // 文件结束后关闭文件
+                return;
+            }
+            printf("file read error\n");
+        }
+    }
+    fclose(fp);
+}
+void save()
+{
+    FILE *fp;
+    int i;
+    if ((fp = fopen("stu_list", "wb")) == NULL) // 判断是否存在此文件,并输出打开一个二进制文件
+    {
+        printf("cannot open file\n");
+        return;
+    }
+    for (i = 0; i < 4; i++)
+    {
+        if (fwrite(&stud[i], sizeof(struct student_type), 1, fp) != 1) // 执行并判断fwrite是否调用成功
+        {
+            printf("file write error\n");
+        }
+    }
+    fclose(fp);
+}
+void read()
+{
+    int i;
+    FILE *fp;
+    fp = fopen("stu_list", "rb"); // 因为写入为二进制写入(wb)，所以要为输入打开一个二进制文件
+    for (i = 0; i < 4; i++)
+    {
+        fread(&stud[i], sizeof(struct student_type), 1, fp); // 读取fp指向的文件内容
+        printf("%-10s %4d %4d %-15s\n", stud[i].name, stud[i].num, stud[i].age, stud[i].addr);
+    }
+    fclose(fp);
+}
+
 void main()
+// 运用把两个文件名一起输入的方式实现复制
+// void main(int argc, char *argv[]) // argc为参数数量，*argv[]为指向装载参数的数组指针
 {
     // 二维数组地址指针
     // int a[3][4] = {1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23};
@@ -298,21 +471,196 @@ void main()
     // // do while相当于until事件，当····时结束循环
 
     // 建立并输出动态链表
-    struct dynamicList *listHead;
-    listHead = creat();
-    printList(listHead);
+    // long delNum;
+    // struct dynamicList *listHead;
+    // struct dynamicList *delHead;
+    // struct dynamicList *iner;
+    // struct dynamicList *inserList;
+    // listHead = creat(1); // 调用creat()函数后建立了一个单向动态链表，其返回值为指向头指针的指针变量
+    // printList(listHead);
+    // // 删除结点
+    // // printf("Plese input need delete number:");
+    // // scanf("%d", &delNum);
+    // // delHead = del(listHead, delNum);
+    // // printList(delHead);
+    // // 插入结点
+    // iner = creat(0);
+    // printList(iner);
+    // inserList = insert(listHead, iner);
+    // printList(inserList);
+
+    // 使用枚举方法处理5色球每次取3球不同色的不同取法并输出排列情况
+    // enum color
+    // {
+    //     red,
+    //     yellow,
+    //     blue,
+    //     white,
+    //     black
+    // };
+    // enum color i, j, k, pri;
+    // int n, loop;
+    // n = 0;
+    // for (i = red; i <= black; i++)
+    // {
+    //     for (j = red; j <= black; j++)
+    //     {
+    //         if (i != j)
+    //         {
+    //             for (k = red; k <= black; k++)
+    //             {
+    //                 if ((k != i) && (k != j))
+    //                 {
+    //                     n = n + 1; // 判断三色不同色后取法+1
+    //                     printf("%-4d", n);
+    //                     for (loop = 1; loop <= 3; loop++) // 取出第几个球是什么颜色的循环
+    //                     {
+    //                         switch (loop) // 循环取出的第几个球，将i，j，k值依次赋给pri
+    //                         {
+    //                         case 1:
+    //                             pri = i;
+    //                             break;
+    //                         case 2:
+    //                             pri = j;
+    //                             break;
+    //                         case 3:
+    //                             pri = k;
+    //                             break;
+    //                         default:
+    //                             break;
+    //                         }
+    //                         switch (pri) // 循环取出球的颜色，根据pri的值依次输出球的颜色
+    //                         {
+    //                         case red:
+    //                             printf("%-10s", "red");
+    //                             break;
+    //                         case yellow:
+    //                             printf("%-10s", "yellow");
+    //                             break;
+    //                         case blue:
+    //                             printf("%-10s", "blue");
+    //                             break;
+    //                         case white:
+    //                             printf("%-10s", "white");
+    //                             break;
+    //                         case black:
+    //                             printf("%-10s", "black");
+    //                             break;
+    //                         default:
+    //                             break;
+    //                         }
+    //                     }
+    //                     printf("\n");
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    // printf("\ntotal:%5d\n", n);
+
+    // 循环位移
+    // unsigned a, b, c;
+    // int n;
+    // scanf("a=%o,n=%d", &a, &n);
+    // b = a << (32 - n); // 32位系统左移n位，先将a右端n位放到b的高n位中
+    // c = a >> n; // 再将a右移n位，其左面高位n位补0
+    // c = c | b; // 或位运算
+    // printf("%o\n%o", a, c);
+
+    // 键入字符，逐个送到磁盘上，直到输入一个#为止
+    // FILE *fp;
+    // char ch, fileName[10];
+    // scanf("%s", fileName);                   // 先输入文件名，这里的fileName可以直接写成常量模式直接指定打开哪个文件
+    // if ((fp = fopen(fileName, "w")) == NULL) // 文件名为空时关闭文件结束程序
+    // {
+    //     printf("cannot open file\n");
+    //     exit(0);
+    // }
+    // ch = getchar(); // 此语句用来接收在执行scanf语句时最后输入的回车符
+    // ch = getchar(); // 接收输入的第一个字符
+    // while (ch != '#')
+    // {
+    //     fputc(ch, fp);  // 将ch字符输出到fp所指的文件中
+    //     putchar(ch);    // 这是个宏定义，相当于#define putchar(c) fputc(c,stdout)
+    //     ch = getchar(); // 循环接收输入的字符
+    // }
+    // putchar(10); // 向屏幕输出一个换行符
+    // fclose(fp);  // 关闭文件
+
+    // 将一个磁盘文件中的信息复制到另一个磁盘文件中
+    // FILE *in, *out;
+    // char inFile[10], outFile[10];
+    // printf("Enter the inFile name:\n");
+    // scanf("%s", inFile);
+    // printf("Enter the outFile name:\n");
+    // scanf("%s", outFile);
+    // if ((in = fopen(inFile, "r")) == NULL) // 只读,先给指针变量in赋值再判断是否为NULL
+    // {
+    //     printf("cannot open inFile\n");
+    //     exit(0); // 结束程序
+    // }
+    // if ((out = fopen(outFile, "w")) == NULL) // 只写,先给指针变量out赋值再判断是否为NULL
+    // {
+    //     printf("cannot open outFile\n");
+    //     exit(0); // 结束程序
+    // }
+    // while (!feof(in)) // 当in指向的文件读出字符不为EOF时执行动作
+    // {
+    //     fputc(fgetc(in), out); // fgetc(in)先读出字符，返回一个字符当作fputc()的第一个实参进行复制操作
+    // }
+    // fclose(in);  // 关闭in指向的文件
+    // fclose(out); // 关闭out指向的文件
+    // printf("Copy complete!");
+
+    // 运用把两个文件名一起输入的方式实现复制
+    // FILE *in, *out;
+    // char ch;
+    // // 三个参数，第一个参数为本程序编译后生成的exe文件名；第二个参数为需要读取的文件名；第三个参数为需要写入的文件名
+    // if (argc != 3) // 这样可以在控制台直接输入例如本程序：Ctest.exe in.c out.c
+    // {
+    //     printf("You forgot to enter a fileName\n");
+    //     exit(0);
+    // }
+    // // 只写
+    // if ((in = fopen(argv[1], "r")) == NULL)
+    // {
+    //     printf("cannot open inFile\n");
+    //     exit(0);
+    // }
+    // // 只读
+    // if ((out = fopen(argv[2], "w")) == NULL)
+    // {
+    //     printf("cannot open outFile\n");
+    //     exit(0);
+    // }
+    // while (!feof(in))
+    // {
+    //     fputc(fgetc(in), out);
+    // }
+    // fclose(in);
+    // fclose(out);
+    // printf("Copy complete!");
+
+    // 写入、读出一组或多组数据
+    int i;
+    for (i = 0; i < 4; i++) // 循环输入全局变量stud结构体内各值
+    {
+        scanf("%s,%d,%d,%s", stud[i].name, &stud[i].num, &stud[i].age, stud[i].addr);
+    }
+    save(); // 执行保存结构体内容
+    read(); // 输出文件内容
 }
 
 // 求a和b中的大者max函数
-int max(int x, int y)
-{
-    int z;
-    if (x > y)
-        z = x;
-    else
-        z = y;
-    return (z);
-}
+// int max(int x, int y)
+// {
+//     int z;
+//     if (x > y)
+//         z = x;
+//     else
+//         z = y;
+//     return (z);
+// }
 
 // 输入学生序号，输出学生全部成绩*search函数
 // float *search(float (*pointer)[4], int n) // pointer为指向包含4个元素的一维数组的指针变量，如pointer + 1指向score数组序号为1的行
