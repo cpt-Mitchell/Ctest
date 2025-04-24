@@ -189,11 +189,12 @@ struct student_type // 声明结构体
     int age;
     char addr[15];
 } stud[4]; // 输入4个数据
+// 执行从stu_dat文件中读入数据并输出到stu_list文件中
 void load()
 {
     FILE *fp;
     int i;
-    if ((fp = fopen("stu_dat", "rb")) == NULL)
+    if ((fp = fopen("stu_dat", "rb")) == NULL) // 打开stu_dat文件并判断是否有这个文件
     {
         printf("cannot open infile\n");
         return;
@@ -643,10 +644,11 @@ void main()
 
     // 写入、读出一组或多组数据
     int i;
-    for (i = 0; i < 4; i++) // 循环输入全局变量stud结构体内各值
-    {
-        scanf("%s,%d,%d,%s", stud[i].name, &stud[i].num, &stud[i].age, stud[i].addr);
-    }
+    // for (i = 0; i < 4; i++) // 循环输入全局变量stud结构体内各值
+    // {
+    //     scanf("%s,%d,%d,%s", stud[i].name, &stud[i].num, &stud[i].age, stud[i].addr);
+    // }
+    load(); // 执行从stu_dat文件中读入数据并输出到stu_list文件中
     save(); // 执行保存结构体内容
     read(); // 输出文件内容
 }
